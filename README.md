@@ -1,4 +1,4 @@
-# Original-LSTM
+# LSTM Variants
 
 Implementation of the original LSTM (without forget gate) (Hochreiter and Schmidhuber, 1997)
 
