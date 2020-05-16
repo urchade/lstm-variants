@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="lstm-variants",
-    version="0.0.1",
+    version="0.0.4",
     author="Urchade Zaratiana",
     author_email="urchade.zaratiana@gmail.com",
     description="Long-Short Term Memory variants",
@@ -20,3 +20,4 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
 )
+
