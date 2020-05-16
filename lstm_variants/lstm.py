@@ -104,3 +104,97 @@ class BiLSTM(nn.Module):
         outputs = torch.cat(outputs, -1)
 
         return outputs, (hidden_states, cell_states)
+
+
+class FocusedLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super().__init__()
+
+        self.W = nn.Parameter(torch.randn(size=(input_size, hidden_size)))
+        self.Ri, self.Ro = nn.Parameter(torch.randn(size=(2, hidden_size, hidden_size)))
+
+        self.b, self.bi, self.bo = nn.Parameter(torch.randn(size=(3, hidden_size,)))
+
+        self.h_init = torch.zeros(size=(hidden_size,), dtype=torch.float32)
+
+    def forward(self, x, states):
+
+        if states is None:
+            h_t = self.h_init
+            c_t = self.h_init
+        else:
+            h_t, c_t = states
+
+        if self.batch_first:
+            _, seq_length, n_input = x.shape
+        else:
+            seq_length, _, _ = x.shape
+
+        outputs = []
+
+        for t in range(seq_length):
+
+            if self.batch_first:
+                x_t = x[:, t, :].clone()
+            else:
+                x_t = x[t, :, :].clone()
+
+            input_gate = torch.sigmoid(h_t @ self.Ri + self.bi)
+            output_gate = torch.sigmoid(h_t @ self.Ro + self.bo)
+            cell_input = torch.tanh(x_t @ self.Wz + self.b)
+
+            c_t = c_t + input_gate * cell_input
+            h_t = output_gate * torch.tanh(c_t)
+
+            outputs.append(h_t)
+
+        outputs = torch.stack(outputs)
+
+        return outputs, (h_t, c_t)
+
+
+class Lightweight(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super().__init__()
+
+        self.W = nn.Parameter(torch.randn(size=(input_size, hidden_size)))
+        self.Ri = nn.Parameter(torch.randn(size=(2, hidden_size, hidden_size)))
+
+        self.b, self.bi = nn.Parameter(torch.randn(size=(2, hidden_size,)))
+
+        self.h_init = torch.zeros(size=(hidden_size,), dtype=torch.float32)
+
+    def forward(self, x, states):
+
+        if states is None:
+            h_t = self.h_init
+            c_t = self.h_init
+        else:
+            h_t, c_t = states
+
+        if self.batch_first:
+            _, seq_length, n_input = x.shape
+        else:
+            seq_length, _, _ = x.shape
+
+        outputs = []
+
+        for t in range(seq_length):
+
+            if self.batch_first:
+                x_t = x[:, t, :].clone()
+            else:
+                x_t = x[t, :, :].clone()
+
+            input_gate = torch.sigmoid(h_t @ self.Ri + self.bi)
+            cell_input = torch.tanh(x_t @ self.Wz + self.b)
+
+            c_t = c_t + input_gate * cell_input
+
+            h_t = torch.tanh(c_t)
+
+            outputs.append(h_t)
+
+        outputs = torch.stack(outputs)
+
+        return outputs, (h_t, c_t)
