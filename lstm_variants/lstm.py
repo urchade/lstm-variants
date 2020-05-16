@@ -12,26 +12,19 @@ class LSTM(nn.Module):
         self.batch_first = batch_first
         self.reversed = reverse
 
-        self.Wi = nn.Parameter(torch.randn(size=(input_size, hidden_size)))
-        self.Wo = nn.Parameter(torch.randn(size=(input_size, hidden_size)))
-        self.Wz = torch.nn.Parameter(torch.randn(size=(input_size, hidden_size)))
+        self.Wi, self.Wo, self.Wz = nn.Parameter(torch.randn(size=(3, input_size, hidden_size)))
 
-        self.Ri = nn.Parameter(torch.randn(size=(hidden_size, hidden_size)))
-        self.Ro = nn.Parameter(torch.randn(size=(hidden_size, hidden_size)))
-        self.Rz = nn.Parameter(torch.randn(size=(hidden_size, hidden_size)))
+        self.Ri, self.Ro, self.Rz = nn.Parameter(torch.randn(size=(3, hidden_size, hidden_size)))
 
-        self.bi = nn.Parameter(torch.randn(size=(hidden_size,)))
-        self.bo = nn.Parameter(torch.randn(size=(hidden_size,)))
-        self.bz = nn.Parameter(torch.randn(size=(hidden_size,)))
+        self.bi, self.bo, self.bz = nn.Parameter(torch.randn(size=(3, hidden_size,)))
 
         self.h_init = torch.zeros(size=(hidden_size,), dtype=torch.float32)
-        self.c_init = torch.zeros(size=(hidden_size,), dtype=torch.float32)
 
     def forward(self, x, states=None):
 
         if states is None:
             h_t = self.h_init
-            c_t = self.c_init
+            c_t = self.h_init
         else:
             h_t, c_t = states
 
