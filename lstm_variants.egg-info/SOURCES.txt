@@ -1,0 +1,6 @@
+README.md
+setup.py
+lstm_variants.egg-info/PKG-INFO
+lstm_variants.egg-info/SOURCES.txt
+lstm_variants.egg-info/dependency_links.txt
+lstm_variants.egg-info/top_level.txt
