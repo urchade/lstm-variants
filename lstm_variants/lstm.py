@@ -18,13 +18,12 @@ class LSTM(nn.Module):
 
         self.bi, self.bo, self.bz = nn.Parameter(torch.randn(size=(3, hidden_size,)))
 
-        self.h_init = torch.zeros(size=(hidden_size,), dtype=torch.float32)
+        self.states_init = torch.zeros(size=(2, hidden_size,))
 
     def forward(self, x, states=None):
 
         if states is None:
-            h_t = self.h_init
-            c_t = self.h_init
+            h_t, c_t = self.states_init
         else:
             h_t, c_t = states
 
@@ -69,13 +68,13 @@ class BiLSTM(nn.Module):
 
         self.direction = nn.ModuleList([forward, backward])
 
-        self.hid_init = torch.zeros(size=(hidden_size,), dtype=torch.float32)
+        self.states_init = torch.zeros(size=(2, hidden_size,))
 
     def forward(self, x, states=None):
 
         if states is None:
-            state_forward = self.hid_init, self.hid_init
-            state_backward = self.hid_init, self.hid_init
+            state_forward = self.states_init
+            state_backward = self.states_init
             states = state_forward, state_backward
 
         else:
@@ -107,21 +106,22 @@ class BiLSTM(nn.Module):
 
 
 class FocusedLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size):
+    def __init__(self, input_size, hidden_size, batch_first=True):
         super().__init__()
+
+        self.batch_first = batch_first
 
         self.W = nn.Parameter(torch.randn(size=(input_size, hidden_size)))
         self.Ri, self.Ro = nn.Parameter(torch.randn(size=(2, hidden_size, hidden_size)))
 
         self.b, self.bi, self.bo = nn.Parameter(torch.randn(size=(3, hidden_size,)))
 
-        self.h_init = torch.zeros(size=(hidden_size,), dtype=torch.float32)
+        self.states_init = torch.zeros(size=(2, hidden_size,))
 
-    def forward(self, x, states):
+    def forward(self, x, states=None):
 
         if states is None:
-            h_t = self.h_init
-            c_t = self.h_init
+            h_t, c_t = self.states_init
         else:
             h_t, c_t = states
 
@@ -141,7 +141,7 @@ class FocusedLSTM(nn.Module):
 
             input_gate = torch.sigmoid(h_t @ self.Ri + self.bi)
             output_gate = torch.sigmoid(h_t @ self.Ro + self.bo)
-            cell_input = torch.tanh(x_t @ self.Wz + self.b)
+            cell_input = torch.tanh(x_t @ self.W + self.b)
 
             c_t = c_t + input_gate * cell_input
             h_t = output_gate * torch.tanh(c_t)
@@ -153,22 +153,23 @@ class FocusedLSTM(nn.Module):
         return outputs, (h_t, c_t)
 
 
-class Lightweight(nn.Module):
-    def __init__(self, input_size, hidden_size):
+class LightweightLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, batch_first=True):
         super().__init__()
 
+        self.batch_first = batch_first
+
         self.W = nn.Parameter(torch.randn(size=(input_size, hidden_size)))
-        self.Ri = nn.Parameter(torch.randn(size=(2, hidden_size, hidden_size)))
+        self.Ri = nn.Parameter(torch.randn(size=(hidden_size, hidden_size)))
 
         self.b, self.bi = nn.Parameter(torch.randn(size=(2, hidden_size,)))
 
-        self.h_init = torch.zeros(size=(hidden_size,), dtype=torch.float32)
+        self.states_init = torch.zeros(size=(2, hidden_size,), dtype=torch.float32)
 
-    def forward(self, x, states):
+    def forward(self, x, states=None):
 
         if states is None:
-            h_t = self.h_init
-            c_t = self.h_init
+            h_t, c_t = self.states_init
         else:
             h_t, c_t = states
 
@@ -187,7 +188,7 @@ class Lightweight(nn.Module):
                 x_t = x[t, :, :].clone()
 
             input_gate = torch.sigmoid(h_t @ self.Ri + self.bi)
-            cell_input = torch.tanh(x_t @ self.Wz + self.b)
+            cell_input = torch.tanh(x_t @ self.W + self.b)
 
             c_t = c_t + input_gate * cell_input
 

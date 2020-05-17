@@ -1,1 +1,1 @@
-from .lstm import BiLSTM, LSTM
+from .lstm import BiLSTM, LSTM, FocusedLSTM, LightweightLSTM
