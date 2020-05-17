@@ -1,8 +1,10 @@
 # LSTM Variants
 
-
-**Install**:`pip install lstm-variants`
-
+### Installation
+```bash
+pip install lstm-variants
+```
+### Usage
 ```python
 from lstm_variants import LightweightLSTM
 import torch
